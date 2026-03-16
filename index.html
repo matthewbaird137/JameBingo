@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jeme Bingo</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f4f9;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        h2 { color: #333; margin-bottom: 20px; }
+
+        #grid-container {
+            display: grid;
+            grid-template-columns: repeat(4, 100px);
+            grid-template-rows: repeat(4, 100px);
+            gap: 12px;
+        }
+
+        button {
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+            border: 2px solid #ddd;
+            border-radius: 12px;
+            background-color: white;
+            font-weight: bold;
+            font-size: 14px;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        button.clicked {
+            background-color: #4CAF50;
+            color: white;
+            border-color: #2E7D32;
+            transform: scale(0.92);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        button:hover:not(.clicked) {
+            background-color: #fff;
+            border-color: #4CAF50;
+            color: #4CAF50;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Jeme BINGOOOOOOOO</h2>
+    <div id="grid-container"></div>
+
+    <script>
+        const words = [
+            "Loud Munching", "Says Ref", "Only Child", "Says Surely Thats A Red", "BasketBall Comment", "Goons abt Matthew Chen", "Neeky Pokimon Comment", "Physik being hard complaint", 
+            "DoomScroll", "Rushing HW", "Silent Treatment", "Laughs At Own Joke", "Speak And Eat", "Comment abt holiday/ living together", "'PE is Real subject'", "BasketBall Glaze"
+        ];
+
+        const gridContainer = document.getElementById('grid-container');
+        let activeButtons = 0;
+        let hasWon = false;
+
+        // Shuffle function (Fisher-Yates)
+        function shuffle(array) {
+            let currentIndex = array.length;
+            while (currentIndex != 0) {
+                let randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                // Swap elements
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        function createGrid() {
+            // Shuffle the main array and take the first 16 (no repeats)
+            const gameWords = shuffle([...words]);
+
+            for (let i = 0; i < 16; i++) {
+                const button = document.createElement('button');
+                button.innerText = gameWords[i];
+                
+                button.onclick = function() {
+                    if (this.classList.contains('clicked')) {
+                        this.classList.remove('clicked');
+                        activeButtons--;
+                    } else {
+                        this.classList.add('clicked');
+                        activeButtons++;
+                    }
+
+                    // Win Condition
+                    if (activeButtons === 4 && !hasWon) {
+                        hasWon = true;
+
+                        // Find all currently clicked buttons to get their text
+                        const selectedElements = document.querySelectorAll('.clicked');
+                        const selectedWords = Array.from(selectedElements).map(btn => btn.innerText);
+
+                        setTimeout(() => {
+                            alert(`You win!\n\nYour 4 words were:\n• ${selectedWords.join('\n• ')}`);
+                        }, 150);
+                    }
+                };
+                
+                gridContainer.appendChild(button);
+            }
+        }
+
+        createGrid();
+    </script>
+</body>
+</html>
