@@ -1,236 +1,157 @@
-<!DOCTYPE html>
+</html><!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Button Challenge</title>
     <style>
-        :root {
-            --primary: #4CAF50;
-            --bg: #f0f2f5;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: var(--bg);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-            margin: 0;
-        }
-
-        .setup-section, .game-section {
+        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; background: #f0f2f5; }
+        .hidden { display: none !important; }
+        
+        /* Grid Styles */
+        #grid-container { 
+            display: grid; 
+            grid-template-columns: repeat(4, 1fr); 
+            gap: 10px; 
+            max-width: 400px; 
             width: 100%;
-            max-width: 400px;
-            text-align: center;
+            margin: 20px 0;
         }
-
-        input[type="text"] {
-            width: 80%;
-            padding: 12px;
-            font-size: 16px; /* Prevents iOS zoom on focus */
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            margin-bottom: 10px;
-        }
-
-        .btn-start {
-            padding: 12px 24px;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-weight: bold;
+        .grid-btn { 
+            aspect-ratio: 1/1; 
+            border: 2px solid #ddd; 
+            border-radius: 8px; 
+            background: white; 
+            font-weight: bold; 
             cursor: pointer;
-        }
-
-        #grid-container {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
-            margin-top: 20px;
-        }
-
-        .grid-btn {
-            aspect-ratio: 1 / 1;
-            background: white;
-            border: 2px solid #ddd;
-            border-radius: 10px;
-            font-weight: bold;
             font-size: 12px;
-            transition: 0.2s;
-            -webkit-tap-highlight-color: transparent; /* Mobile polish */
         }
+        .grid-btn.clicked { background: #4CAF50; color: white; border-color: #2E7D32; }
 
-        .grid-btn.clicked {
-            background: var(--primary);
-            color: white;
-            border-color: #2E7D32;
-            transform: scale(0.9);
-        }
-
-        .leaderboard {
-            margin-top: 30px;
-            width: 100%;
-            max-width: 400px;
-            background: white;
-            padding: 15px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-        }
-
-        .leaderboard h3 { margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 10px; }
-        .score-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #fafafa; }
-
-        .hidden { display: none; }
+        /* Leaderboard Styles */
+        .leaderboard { width: 100%; max-width: 400px; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .score-row { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #eee; }
+        
+        /* Input Styles */
+        input { padding: 12px; font-size: 16px; border: 2px solid #ddd; border-radius: 8px; width: 250px; margin-bottom: 10px; }
+        .start-btn { padding: 12px 24px; background: #4CAF50; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div id="setup" class="setup-section">
-        <h2>Enter Your Name</h2>
-        <input type="text" id="playerName" placeholder="Your name..." autocomplete="off">
+    <div id="setup-area">
+        <h2>Enter Name</h2>
+        <input type="text" id="playerName" placeholder="Your Name">
         <br>
-        <button class="btn-start" onclick="startGame()">Start Game</button>
+        <button class="start-btn" onclick="startGame()">Start Game</button>
     </div>
 
-    <div id="game" class="game-section hidden">
+    <div id="game-area" class="hidden">
         <h2 id="welcomeMsg"></h2>
+        <p>Current Progress: <strong id="countDisplay">0</strong> / 16</p>
         <div id="grid-container"></div>
+        <button onclick="location.reload()" style="margin-top:10px; padding:5px; cursor:pointer;">Reset Game</button>
     </div>
 
-    <div class="leaderboard">
-        <h3>Leaderboard (Local)</h3>
+    <div class="leaderboard" style="margin-top: 20px;">
+        <h3>Leaderboard</h3>
         <div id="scoreList"></div>
     </div>
 
     <script>
-    // 1. Setup variables at the very top
-    const words = ["jeme crashout", "jack voice crack", "ethan mogging","gay pda", "ragebait", "mia ragebaited", "mia complains about handcuffs", "mia impression of jeme", "glaze henryk", "mahjong", "niche music reference", "lesbian pda", "straight ppl pda", "racism", "katie talks abt middle age men", "jeme complains abt jeme bingo", "bad joke", "katie left rubbish", "jeme says something obstanant", "proof", "podge story", "67","Loud Munching", "Says Ref", "Only Child", "Says Surely Thats A Red", "BasketBall Comment", "Goons abt Matthew Chen", "Neeky Pokimon Comment", "Physics being hard complaint", 
+        const words = ["jeme crashout", "jack voice crack", "ethan mogging","gay pda", "ragebait", "mia ragebaited", "mia complains about handcuffs", "mia impression of jeme", "glaze henryk", "mahjong", "niche music reference", "lesbian pda", "straight ppl pda", "racism", "katie talks abt middle age men", "jeme complains abt jeme bingo", "bad joke", "katie left rubbish", "jeme says something obstanant", "proof", "podge story", "67","Loud Munching", "Says Ref", "Only Child", "Says Surely Thats A Red", "BasketBall Comment", "Goons abt Matthew Chen", "Neeky Pokimon Comment", "Physics being hard complaint", 
             "quentin glaze", "silent gooning", "DoomScroll", "Rushing HW", "Silent Treatment", "Laughs At Own Joke", "Speed face", "Comment abt holiday/ living together", "'PE is Real subject'", "BasketBall Glaze" , "Doing HW preformatively", "Asks abt something that was just said", "Runs a joke dry", "absolute...", "uses applewatch"        
              ];
+        let currentPlayer = "";
+        let hasWon = false;
 
-    let currentPlayer = "";
-    let hasWon = false;
+        // Initialize display on load
+        window.onload = refreshLeaderboard;
 
-    // Run this when the page first loads
-    window.onload = function() {
-        updateLeaderboardDisplay();
-    };
+        function startGame() {
+            const input = document.getElementById('playerName');
+            if (!input.value.trim()) return alert("Please enter a name!");
 
-    function startGame() {
-        const nameInput = document.getElementById('playerName').value;
-        if (!nameInput || nameInput.trim() === "") {
-            alert("Please enter a name first!");
-            return;
+            currentPlayer = input.value.trim();
+            hasWon = false;
+
+            // Update UI
+            document.getElementById('setup-area').classList.add('hidden');
+            document.getElementById('game-area').classList.remove('hidden');
+            document.getElementById('welcomeMsg').innerText = "Good luck, " + currentPlayer;
+
+            // Start player at 0
+            saveScore(currentPlayer, 0);
+            renderGrid();
         }
-        
-        currentPlayer = nameInput.trim();
-        hasWon = false; // Reset win state for new game
-        
-        // Add player to the leaderboard immediately with 0
-        saveOrUpdateScore(currentPlayer, 0);
 
-        document.getElementById('setup').classList.add('hidden');
-        document.getElementById('game').classList.remove('hidden');
-        document.getElementById('welcomeMsg').innerText = "Player: " + currentPlayer;
-        
-        createGrid();
-    }
+        function renderGrid() {
+            const container = document.getElementById('grid-container');
+            container.innerHTML = "";
+            const shuffled = [...words].sort(() => Math.random() - 0.5);
 
-    function createGrid() {
-        const container = document.getElementById('grid-container');
-        container.innerHTML = ""; // Clear any old buttons
-        
-        // Shuffle the words
-        const shuffled = [...words].sort(() => Math.random() - 0.5);
+            for (let i = 0; i < 16; i++) {
+                const btn = document.createElement('button');
+                btn.className = "grid-btn";
+                btn.innerText = shuffled[i];
 
-        for (let i = 0; i < 16; i++) {
-            const btn = document.createElement('button');
-            btn.className = 'grid-btn';
-            btn.innerText = shuffled[i];
-            
-            btn.onclick = function() {
-                // 1. Toggle the visual "clicked" state
-                this.classList.toggle('clicked');
-                
-                // 2. Count EXACTLY how many buttons are currently green
-                const allClicked = document.querySelectorAll('.clicked');
-                const currentCount = allClicked.length;
-                
-                // 3. Update the number on the screen
-                document.getElementById('countDisplay').innerText = currentCount;
+                btn.onclick = function() {
+                    this.classList.toggle('clicked');
+                    
+                    // RE-COUNT
+                    const totalClicked = document.querySelectorAll('.clicked').length;
+                    
+                    // UPDATE THE "0/4" DISPLAY
+                    document.getElementById('countDisplay').innerText = totalClicked;
 
-                // 4. Update the leaderboard data
-                saveOrUpdateScore(currentPlayer, currentCount);
+                    // UPDATE THE LEADERBOARD
+                    saveScore(currentPlayer, totalClicked);
 
-                // 5. Check for Win
-                if (currentCount === 4 && !hasWon) {
-                    hasWon = true;
-                    setTimeout(() => alert("Victory! 4 buttons selected."), 100);
-                }
-            };
-            container.appendChild(btn);
-        }
-    }
-
-    function saveOrUpdateScore(name, score) {
-        // Grab existing scores from LocalStorage
-        let data = localStorage.getItem('gameScores');
-        let scores = data ? JSON.parse(data) : [];
-        
-        // Find if this player is already in the list
-        let found = false;
-        for (let i = 0; i < scores.length; i++) {
-            if (scores[i].name.toLowerCase() === name.toLowerCase()) {
-                scores[i].score = score; // Update their score
-                found = true;
-                break;
+                    // WIN CHECK
+                    if (totalClicked === 16 && !hasWon) {
+                        hasWon = true;
+                        setTimeout(() => alert("Winner! You got 16!"), 100);
+                    }
+                };
+                container.appendChild(btn);
             }
         }
 
-        // If not found, add them as a new entry
-        if (!found) {
-            scores.push({ name: name, score: score });
+        function saveScore(name, score) {
+            let scores = JSON.parse(localStorage.getItem('myGameScores') || "[]");
+            
+            // Update or Add
+            let index = scores.findIndex(s => s.name.toLowerCase() === name.toLowerCase());
+            if (index !== -1) {
+                scores[index].score = score;
+            } else {
+                scores.push({ name: name, score: score });
+            }
+
+            // Sort
+            scores.sort((a, b) => b.score - a.score);
+
+            // Save
+            localStorage.setItem('myGameScores', JSON.stringify(scores));
+            refreshLeaderboard();
         }
 
-        // Sort: Highest score at the top
-        scores.sort((a, b) => b.score - a.score);
+        function refreshLeaderboard() {
+            const list = document.getElementById('scoreList');
+            let scores = JSON.parse(localStorage.getItem('myGameScores') || "[]");
+            
+            if (scores.length === 0) {
+                list.innerHTML = "No players yet.";
+                return;
+            }
 
-        // Save back to LocalStorage
-        localStorage.setItem('gameScores', JSON.stringify(scores));
-        
-        // Refresh the visual leaderboard
-        updateLeaderboardDisplay();
-    }
-
-    function updateLeaderboardDisplay() {
-        const list = document.getElementById('scoreList');
-        if (!list) return;
-
-        let data = localStorage.getItem('gameScores');
-        let scores = data ? JSON.parse(data) : [];
-        
-        if (scores.length === 0) {
-            list.innerHTML = "<p style='color:gray'>No scores yet.</p>";
-            return;
-        }
-
-        // Generate the HTML rows
-        let html = "";
-        scores.forEach((item, index) => {
-            let isMe = (item.name === currentPlayer);
-            html += `
-                <div style="display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid #eee; 
-                     background: ${isMe ? '#d1e7dd' : 'white'}; font-weight: ${isMe ? 'bold' : 'normal'}">
-                    <span>#${index + 1} ${item.name}</span>
-                    <span>${item.score} / 4</span>
+            list.innerHTML = scores.map((s, i) => `
+                <div class="score-row" style="background:${s.name === currentPlayer ? '#d1e7dd' : 'transparent'}">
+                    <span>#${i+1} ${s.name}</span>
+                    <span>${s.score} / 16</span>
                 </div>
-            `;
-        });
-        list.innerHTML = html;
-    }
-</script>
+            `).join('');
+        }
+    </script>
 </body>
 </html>
