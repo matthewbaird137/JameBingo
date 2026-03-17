@@ -97,7 +97,6 @@
 
     <div id="game" class="game-section hidden">
         <h2 id="welcomeMsg"></h2>
-        <p>Buttons pressed: <span id="countDisplay">0</span> / 4</p>
         <div id="grid-container"></div>
     </div>
 
@@ -107,82 +106,131 @@
     </div>
 
     <script>
-        const words = ["Apple", "Cloud", "Neon", "Pulse", "Zen", "Flow", "Bolt", "Echo", "Mars", "Orbit", "Glitch", "Swift", "Nova", "Flux", "Wave", "Data"];
-        let activeButtons = 0;
-        let currentPlayer = "";
+    // 1. Setup variables at the very top
+    const words = ["jeme crashout", "jack voice crack", "ethan mogging","gay pda", "ragebait", "mia ragebaited", "mia complains about handcuffs", "mia impression of jeme", "glaze henryk", "mahjong", "niche music reference", "lesbian pda", "straight ppl pda", "racism", "katie talks abt middle age men", "jeme complains abt jeme bingo", "bad joke", "katie left rubbish", "jeme says something obstanant", "proof", "podge story", "67","Loud Munching", "Says Ref", "Only Child", "Says Surely Thats A Red", "BasketBall Comment", "Goons abt Matthew Chen", "Neeky Pokimon Comment", "Physics being hard complaint", 
+            "quentin glaze", "silent gooning", "DoomScroll", "Rushing HW", "Silent Treatment", "Laughs At Own Joke", "Speed face", "Comment abt holiday/ living together", "'PE is Real subject'", "BasketBall Glaze" , "Doing HW preformatively", "Asks abt something that was just said", "Runs a joke dry", "absolute...", "uses applewatch"        
+             ];
 
-        // Load leaderboard on startup
-        window.onload = updateLeaderboardDisplay;
+    let currentPlayer = "";
+    let hasWon = false;
 
-        function startGame() {
-            const nameInput = document.getElementById('playerName').value;
-            if (nameInput.trim() === "") return alert("Please enter a name!");
-            
-            currentPlayer = nameInput;
-            document.getElementById('setup').classList.add('hidden');
-            document.getElementById('game').classList.remove('hidden');
-            document.getElementById('welcomeMsg').innerText = `Good luck, ${currentPlayer}!`;
-            
-            createGrid();
+    // Run this when the page first loads
+    window.onload = function() {
+        updateLeaderboardDisplay();
+    };
+
+    function startGame() {
+        const nameInput = document.getElementById('playerName').value;
+        if (!nameInput || nameInput.trim() === "") {
+            alert("Please enter a name first!");
+            return;
         }
+        
+        currentPlayer = nameInput.trim();
+        hasWon = false; // Reset win state for new game
+        
+        // Add player to the leaderboard immediately with 0
+        saveOrUpdateScore(currentPlayer, 0);
 
-        function createGrid() {
-            const container = document.getElementById('grid-container');
-            const shuffled = [...words].sort(() => Math.random() - 0.5);
+        document.getElementById('setup').classList.add('hidden');
+        document.getElementById('game').classList.remove('hidden');
+        document.getElementById('welcomeMsg').innerText = "Player: " + currentPlayer;
+        
+        createGrid();
+    }
 
-            for (let i = 0; i < 16; i++) {
-                const btn = document.createElement('button');
-                btn.className = 'grid-btn';
-                btn.innerText = shuffled[i];
+    function createGrid() {
+        const container = document.getElementById('grid-container');
+        container.innerHTML = ""; // Clear any old buttons
+        
+        // Shuffle the words
+        const shuffled = [...words].sort(() => Math.random() - 0.5);
+
+        for (let i = 0; i < 16; i++) {
+            const btn = document.createElement('button');
+            btn.className = 'grid-btn';
+            btn.innerText = shuffled[i];
+            
+            btn.onclick = function() {
+                // 1. Toggle the visual "clicked" state
+                this.classList.toggle('clicked');
                 
-                btn.onclick = function() {
-                    this.classList.toggle('clicked');
-                    
-                    // Recalculate count
-                    activeButtons = document.querySelectorAll('.clicked').length;
-                    document.getElementById('countDisplay').innerText = activeButtons;
+                // 2. Count EXACTLY how many buttons are currently green
+                const allClicked = document.querySelectorAll('.clicked');
+                const currentCount = allClicked.length;
+                
+                // 3. Update the number on the screen
+                document.getElementById('countDisplay').innerText = currentCount;
 
-                    if (activeButtons === 4) {
-                        saveScore(currentPlayer, 4);
-                        setTimeout(() => {
-                            alert(`Winner! Great job ${currentPlayer}!`);
-                        }, 100);
-                    }
-                };
-                container.appendChild(btn);
+                // 4. Update the leaderboard data
+                saveOrUpdateScore(currentPlayer, currentCount);
+
+                // 5. Check for Win
+                if (currentCount === 4 && !hasWon) {
+                    hasWon = true;
+                    setTimeout(() => alert("Victory! 4 buttons selected."), 100);
+                }
+            };
+            container.appendChild(btn);
+        }
+    }
+
+    function saveOrUpdateScore(name, score) {
+        // Grab existing scores from LocalStorage
+        let data = localStorage.getItem('gameScores');
+        let scores = data ? JSON.parse(data) : [];
+        
+        // Find if this player is already in the list
+        let found = false;
+        for (let i = 0; i < scores.length; i++) {
+            if (scores[i].name.toLowerCase() === name.toLowerCase()) {
+                scores[i].score = score; // Update their score
+                found = true;
+                break;
             }
         }
 
-        function saveScore(name, score) {
-            let scores = JSON.parse(localStorage.getItem('gameScores')) || [];
-            
-            // Add new score
-            scores.push({ name: name, score: score, date: new Date().toLocaleDateString() });
-            
-            // Keep only top 5
-            scores.sort((a, b) => b.score - a.score);
-            scores = scores.slice(0, 5);
-
-            localStorage.setItem('gameScores', JSON.stringify(scores));
-            updateLeaderboardDisplay();
+        // If not found, add them as a new entry
+        if (!found) {
+            scores.push({ name: name, score: score });
         }
 
-        function updateLeaderboardDisplay() {
-            const list = document.getElementById('scoreList');
-            const scores = JSON.parse(localStorage.getItem('gameScores')) || [];
-            
-            if (scores.length === 0) {
-                list.innerHTML = "<p>No scores yet!</p>";
-                return;
-            }
+        // Sort: Highest score at the top
+        scores.sort((a, b) => b.score - a.score);
 
-            list.innerHTML = scores.map(s => `
-                <div class="score-row">
-                    <span><strong>${s.name}</strong></span>
-                    <span>${s.score} Buttons</span>
+        // Save back to LocalStorage
+        localStorage.setItem('gameScores', JSON.stringify(scores));
+        
+        // Refresh the visual leaderboard
+        updateLeaderboardDisplay();
+    }
+
+    function updateLeaderboardDisplay() {
+        const list = document.getElementById('scoreList');
+        if (!list) return;
+
+        let data = localStorage.getItem('gameScores');
+        let scores = data ? JSON.parse(data) : [];
+        
+        if (scores.length === 0) {
+            list.innerHTML = "<p style='color:gray'>No scores yet.</p>";
+            return;
+        }
+
+        // Generate the HTML rows
+        let html = "";
+        scores.forEach((item, index) => {
+            let isMe = (item.name === currentPlayer);
+            html += `
+                <div style="display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid #eee; 
+                     background: ${isMe ? '#d1e7dd' : 'white'}; font-weight: ${isMe ? 'bold' : 'normal'}">
+                    <span>#${index + 1} ${item.name}</span>
+                    <span>${item.score} / 4</span>
                 </div>
-            `).join('');
-        }
-    </script>
+            `;
+        });
+        list.innerHTML = html;
+    }
+</script>
 </body>
 </html>
